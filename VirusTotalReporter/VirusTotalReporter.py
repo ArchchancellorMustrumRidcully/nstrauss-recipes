@@ -259,11 +259,13 @@ class VirusTotalReporter(Processor):
 
     def process_summary_results(self, report: dict, input_path: str):
         """Write VirusTotal report data."""
-        last_analysis_stats = report.get("attributes").get("last_analysis_stats")
-        harmless = last_analysis_stats.get("harmless", 0)
-        malicious = last_analysis_stats.get("malicious", 0)
-        suspicious = last_analysis_stats.get("suspicious", 0)
-        undetected = last_analysis_stats.get("undetected", 0)
+        analysis_stats = report.get("attributes").get("last_analysis_stats")
+        if not analysis_stats:
+            analysis_stats = report.get("attributes").get("stats")
+        harmless = analysis_stats.get("harmless", 0)
+        malicious = analysis_stats.get("malicious", 0)
+        suspicious = analysis_stats.get("suspicious", 0)
+        undetected = analysis_stats.get("undetected", 0)
         total_detected = malicious + suspicious
         total = harmless + malicious + suspicious + undetected
 
@@ -342,7 +344,9 @@ class VirusTotalReporter(Processor):
                     )
                     url_identifier = self.get_base64_unpadded(download_url)
                     report, report_status_code = self.virustotal_api_v3(
-                        f"/urls/{url_identifier}", None, int(self.env.get("submission_timeout"))
+                        f"/urls/{url_identifier}",
+                        None,
+                        int(self.env.get("submission_timeout")),
                     )
 
                     if report_status_code == 200:
